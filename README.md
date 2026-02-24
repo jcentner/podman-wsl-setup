@@ -72,7 +72,8 @@ chmod +x setup-rootless-podman.sh
 | Flag | Effect |
 |---|---|
 | `--skip-socket` | Skip step 6 (podman.socket + `DOCKER_HOST`) |
-| `--non-interactive` | No prompts; enables the socket by default unless `--skip-socket` is also passed |
+| `--skip-docker-shim` | Skip step 7 (`podman-docker` compatibility shim) |
+| `--non-interactive` | No prompts; enables socket + shim by default unless the corresponding skip flag is also passed |
 | `-h` / `--help` | Print the script header docs and exit |
 
 ## What the script does
@@ -83,6 +84,7 @@ chmod +x setup-rootless-podman.sh
 4. **Runs `podman system migrate`** — only if mappings were just added, to fix storage config.
 5. **Verifies rootless Podman** — checks `rootless=true` and runs `quay.io/podman/hello`.
 6. **Optional: enables `podman.socket`** — starts the rootless systemd socket and appends `DOCKER_HOST` to `~/.bashrc` for Docker-tool compatibility.
+7. **Optional: installs `podman-docker`** — provides `/usr/bin/docker` as a shim that delegates to Podman. This lets tools that hardcode `docker` in their CLI calls (e.g. `docker-compose`) work transparently with Podman.
 
 ## Tested on
 
@@ -123,6 +125,8 @@ wsl --unregister podman-test
 | Container test fails | Check networking — ensure `slirp4netns` or `passt` is installed |
 | `cgroup v1 detected` warning | Update your WSL kernel: `wsl --update` from PowerShell |
 | Permission errors on `/run/user/<uid>` | Ensure `dbus-user-session` is installed and you've logged in (not just `su`'d) |
+| `docker` command not found after step 7 | Open a new shell, or run `hash -r` to clear the command cache |
+| `docker info` fails after step 7 | Step 6 (podman.socket) is usually required for the shim to work. Rerun without `--skip-socket`. |
 
 ## License
 

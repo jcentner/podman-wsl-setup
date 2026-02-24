@@ -12,6 +12,9 @@
 #   5) Verifies rootless Podman with a container test
 #   6) Optionally enables the rootless Docker-compatible Podman socket and
 #      appends DOCKER_HOST to ~/.bashrc
+#   7) Optionally installs podman-docker — provides /usr/bin/docker as a
+#      shim that delegates to Podman. Lets tools that hardcode 'docker'
+#      (e.g. nanoclaw, docker-compose) work transparently with Podman.
 #
 # IMPORTANT WSL NOTE:
 #   Rootless Podman requires systemd and shared mount propagation in WSL.
@@ -35,8 +38,9 @@
 #   ./setup-rootless-podman.sh
 #
 # Optional flags:
-#   --skip-socket     Skip step 6 (podman.socket + DOCKER_HOST)
-#   --non-interactive Do not prompt (enable socket by default unless --skip-socket)
+#   --skip-socket      Skip step 6 (podman.socket + DOCKER_HOST)
+#   --skip-docker-shim Skip step 7 (podman-docker compatibility shim)
+#   --non-interactive  Do not prompt (enables socket + shim by default unless skipped)
 #
 # Notes:
 #   - Run as your normal WSL user (NOT with sudo).
@@ -48,11 +52,13 @@
 set -euo pipefail
 
 SKIP_SOCKET=0
+SKIP_DOCKER_SHIM=0
 NON_INTERACTIVE=0
 
 for arg in "$@"; do
   case "$arg" in
     --skip-socket) SKIP_SOCKET=1 ;;
+    --skip-docker-shim) SKIP_DOCKER_SHIM=1 ;;
     --non-interactive) NON_INTERACTIVE=1 ;;
     -h|--help)
       # Print only the header comment block (lines between shebang and "END HEADER" sentinel)
@@ -231,6 +237,46 @@ else
   log "Skipping step 6 (podman.socket + DOCKER_HOST)"
 fi
 
+# --- Step 7: Optional podman-docker compatibility shim ---
+# Installs the podman-docker package, which provides /usr/bin/docker (and
+# /usr/bin/docker-compose on some distros) as thin wrappers around Podman.
+# This lets any tool that hardcodes 'docker' in CLI calls work transparently.
+ENABLE_DOCKER_SHIM=1
+if [[ $SKIP_DOCKER_SHIM -eq 1 ]]; then
+  ENABLE_DOCKER_SHIM=0
+elif [[ $NON_INTERACTIVE -eq 0 ]]; then
+  printf '\nInstall podman-docker (provides /usr/bin/docker → podman shim)? [Y/n] '
+  read -r reply
+  case "${reply:-Y}" in
+    n|N|no|NO) ENABLE_DOCKER_SHIM=0 ;;
+    *) ENABLE_DOCKER_SHIM=1 ;;
+  esac
+fi
+
+if [[ $ENABLE_DOCKER_SHIM -eq 1 ]]; then
+  if dpkg -s podman-docker &>/dev/null; then
+    log "podman-docker is already installed"
+  else
+    log "Installing podman-docker (Docker CLI compatibility shim)"
+    sudo apt-get install -y podman-docker
+  fi
+
+  # Verify the shim is functional
+  if command -v docker >/dev/null 2>&1; then
+    log "docker shim available: $(command -v docker)"
+    # Quick sanity check — 'docker info' should work via podman
+    if docker info >/dev/null 2>&1; then
+      log "docker → podman shim verified (docker info succeeded)"
+    else
+      warn "docker command exists but 'docker info' failed. The podman socket (step 6) may be required."
+    fi
+  else
+    warn "podman-docker installed but 'docker' not found on PATH. You may need to open a new shell."
+  fi
+else
+  log "Skipping step 7 (podman-docker shim)"
+fi
+
 # --- Summary ---
 cat <<EOF
 
@@ -240,7 +286,7 @@ Quick checks:
   podman info --format '{{.Host.Security.Rootless}}'
   podman run --rm quay.io/podman/hello
 
-If you enabled step 6:
+If you enabled step 6 (podman.socket):
   source ~/.bashrc
   echo \$DOCKER_HOST
   systemctl --user status podman.socket
@@ -252,5 +298,9 @@ If step 6 failed in WSL:
   - Then run from Windows PowerShell:
       wsl --shutdown
   - Reopen Ubuntu and rerun this script (or just rerun step 6 commands)
+
+If you enabled step 7 (podman-docker shim):
+  docker info            # should show Podman info
+  docker run --rm hello-world  # should work via Podman
 
 EOF
