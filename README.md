@@ -60,6 +60,7 @@ Reopen WSL Ubuntu and proceed.
 ## Usage
 
 ```bash
+cd ~
 git clone https://github.com/jcentner/podman-wsl-setup.git
 cd podman-wsl-setup
 chmod +x setup-rootless-podman.sh
