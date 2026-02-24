@@ -14,15 +14,16 @@
 #      appends DOCKER_HOST to ~/.bashrc
 #
 # IMPORTANT WSL NOTE:
-#   Rootless Podman requires systemd in WSL. Recent Windows 11 builds enable
-#   it by default for new Ubuntu instances. Verify with:
-#     systemctl is-system-running
+#   Rootless Podman requires systemd and shared mount propagation in WSL.
+#   Recent Windows 11 builds enable systemd by default. Verify with:
+#     systemctl is-system-running       # should print "running" or "degraded"
+#     findmnt -no PROPAGATION /         # should print "shared"
 #
-#   If it prints "running" or "degraded", you're set. Otherwise, enable it:
-#     sudo tee /etc/wsl.conf >/dev/null <<'WSLCONF'
+#   If either check fails, edit /etc/wsl.conf (don't overwrite — preserve
+#   existing settings like [user]) and ensure these lines exist under [boot]:
 #     [boot]
 #     systemd=true
-#     WSLCONF
+#     command=mount --make-rshared /
 #
 #   Then from Windows PowerShell:
 #     wsl --shutdown

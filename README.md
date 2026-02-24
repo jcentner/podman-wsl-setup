@@ -39,15 +39,15 @@ If it prints `shared`, you're set. If `private`, see the [combined `/etc/wsl.con
 
 ### `/etc/wsl.conf` example
 
-If either check above failed, update `/etc/wsl.conf` with both settings at once:
+If either check above failed, edit `/etc/wsl.conf` to ensure these lines exist under `[boot]`:
 
-```bash
-sudo tee /etc/wsl.conf >/dev/null <<'EOF'
+```ini
 [boot]
 systemd=true
 command=mount --make-rshared /
-EOF
 ```
+
+> **Note:** Don't overwrite the file — you may have other settings (e.g. `[user]`). Edit with `sudo nano /etc/wsl.conf` or `sudo vim /etc/wsl.conf` and add any missing lines to the existing `[boot]` section.
 
 Then from **Windows PowerShell**:
 
