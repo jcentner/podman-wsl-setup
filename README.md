@@ -31,8 +31,6 @@ wsl --install Ubuntu-24.04 --name podman-test
 wsl -d podman-test
 ```
 
-Then inside that instance, verify the [prerequisites](#prerequisites) (systemd, shared mount), restart with `wsl --terminate podman-test` and reopen if you changed `/etc/wsl.conf`, and run the script.
-
 When you're done, tear it down:
 
 ```powershell
