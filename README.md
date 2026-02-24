@@ -25,12 +25,27 @@ Recent Windows 11 builds enable systemd by default for new Ubuntu instances. Ver
 systemctl is-system-running
 ```
 
-If it prints `running` or `degraded`, you're set. If not, enable it:
+If it prints `running` or `degraded`, you're set. If not, see the [combined `/etc/wsl.conf` example](#wslconf-example) below.
+
+### Ensure `/` is a shared mount
+
+Rootless Podman uses mount namespaces. If `/` has `private` propagation (the WSL default), bind mounts and volumes inside rootless containers may silently fail. Check with:
+
+```bash
+findmnt -no PROPAGATION /
+```
+
+If it prints `shared`, you're set. If `private`, see the [combined `/etc/wsl.conf` example](#wslconf-example) below.
+
+### `/etc/wsl.conf` example
+
+If either check above failed, update `/etc/wsl.conf` with both settings at once:
 
 ```bash
 sudo tee /etc/wsl.conf >/dev/null <<'EOF'
 [boot]
 systemd=true
+command=mount --make-rshared /
 EOF
 ```
 
@@ -41,25 +56,6 @@ wsl --shutdown
 ```
 
 Reopen WSL Ubuntu and proceed.
-
-### Ensure `/` is a shared mount
-
-Rootless Podman uses mount namespaces. If `/` has `private` propagation (the WSL default), bind mounts and volumes inside rootless containers may silently fail. Check with:
-
-```bash
-findmnt -no PROPAGATION /
-```
-
-If it prints `shared`, you're set. If `private`, add the following to `/etc/wsl.conf`:
-
-```ini
-[boot]
-command=mount --make-rshared /
-```
-
-(This can go in the same `[boot]` section as `systemd=true` — just add the `command=` line below it.)
-
-Then from **Windows PowerShell**: `wsl --shutdown`, and reopen Ubuntu.
 
 ## Usage
 
