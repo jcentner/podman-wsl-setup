@@ -1,0 +1,3 @@
+# SC2034: Allow unused variables (flags like MAPPINGS_CHANGED used conditionally)
+# SC1091: Don't follow sourced files
+disable=SC1091
