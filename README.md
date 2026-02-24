@@ -17,6 +17,28 @@ Running AI coding agents like [nanoclaw](https://github.com/qwibitai/nanoclaw) i
 | **`/` as a shared mount** | WSL defaults to `private`; rootless containers need `shared`. See [below](#ensure--is-a-shared-mount). |
 | **Run as your normal user** | The script uses `sudo` only where needed. Do **not** run the script itself with `sudo`. |
 
+### Set up a fresh WSL instance
+
+You can spin up an isolated Ubuntu instance to test without affecting your main WSL environment.
+
+From **Windows PowerShell**:
+
+```powershell
+# Install a fresh named instance
+wsl --install Ubuntu-24.04 --name podman-test
+
+# Open it
+wsl -d podman-test
+```
+
+Then inside that instance, verify the [prerequisites](#prerequisites) (systemd, shared mount), restart with `wsl --terminate podman-test` and reopen if you changed `/etc/wsl.conf`, and run the script.
+
+When you're done, tear it down:
+
+```powershell
+wsl --unregister podman-test
+```
+
 ### Ensure systemd is enabled in WSL
 
 Recent Windows 11 builds enable systemd by default for new Ubuntu instances. Verify with:
@@ -52,7 +74,7 @@ command=mount --make-rshared /
 Then from **Windows PowerShell**:
 
 ```powershell
-wsl --shutdown
+wsl --terminate podman-test
 ```
 
 Reopen WSL Ubuntu and proceed.
@@ -92,28 +114,6 @@ chmod +x setup-rootless-podman.sh
 - Ubuntu 23.04 under WSL2
 
 Older Ubuntu releases (22.04) should work for steps 1–5 but will lack `passt`; the script detects this and falls back gracefully.
-
-## Testing on a fresh WSL instance
-
-You can spin up an isolated Ubuntu instance to test without affecting your main WSL environment.
-
-From **Windows PowerShell**:
-
-```powershell
-# Install a fresh named instance
-wsl --install Ubuntu-24.04 --name podman-test
-
-# Open it
-wsl -d podman-test
-```
-
-Then inside that instance, verify the [prerequisites](#prerequisites) (systemd, shared mount), restart with `wsl --shutdown` if you changed `/etc/wsl.conf`, and run the script.
-
-When you're done, tear it down:
-
-```powershell
-wsl --unregister podman-test
-```
 
 ## Troubleshooting
 
