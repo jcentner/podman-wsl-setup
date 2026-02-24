@@ -44,7 +44,7 @@ Reopen WSL Ubuntu and proceed.
 ## Usage
 
 ```bash
-git clone https://github.com/<you>/podman-wsl-setup.git
+git clone https://github.com/jcentner/podman-wsl-setup.git
 cd podman-wsl-setup
 chmod +x setup-rootless-podman.sh
 ./setup-rootless-podman.sh
