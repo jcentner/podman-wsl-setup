@@ -122,6 +122,18 @@ else
   warn "cgroup v1 detected. Rootless Podman works best with cgroup v2."
 fi
 
+# --- Shared mount propagation check (informational) ---
+# Rootless Podman needs "/" to be a shared mount for bind mounts and volumes
+# to work correctly inside user namespaces. WSL often defaults to private.
+if findmnt -no PROPAGATION / 2>/dev/null | grep -q shared; then
+  log "/ is a shared mount"
+else
+  warn "/ is not a shared mount. This can cause missing mounts in rootless containers."
+  warn "To fix, add the following to /etc/wsl.conf under [boot]:"
+  warn "  command=mount --make-rshared /"
+  warn "Then run 'wsl --shutdown' from PowerShell and reopen Ubuntu."
+fi
+
 # --- Step 2: Install Podman + dependencies ---
 log "Installing Podman and rootless dependencies"
 

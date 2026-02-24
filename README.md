@@ -41,6 +41,25 @@ wsl --shutdown
 
 Reopen WSL Ubuntu and proceed.
 
+### Ensure `/` is a shared mount
+
+Rootless Podman uses mount namespaces. If `/` has `private` propagation (the WSL default), bind mounts and volumes inside rootless containers may silently fail. Check with:
+
+```bash
+findmnt -no PROPAGATION /
+```
+
+If it prints `shared`, you're set. If `private`, add the following to `/etc/wsl.conf`:
+
+```ini
+[boot]
+command=mount --make-rshared /
+```
+
+(This can go in the same `[boot]` section as `systemd=true` — just add the `command=` line below it.)
+
+Then from **Windows PowerShell**: `wsl --shutdown`, and reopen Ubuntu.
+
 ## Usage
 
 ```bash
@@ -100,6 +119,7 @@ wsl --unregister podman-test
 
 | Symptom | Fix |
 |---|---|
+| `"/" is not a shared mount` warning | Run `sudo mount --make-rshared /`. To persist, add `command=mount --make-rshared /` under `[boot]` in `/etc/wsl.conf` and `wsl --shutdown`. |
 | `podman.socket` fails to enable | Enable systemd in `/etc/wsl.conf` and `wsl --shutdown` |
 | `rootless=false` reported | Ensure you're not running with `sudo`; check `/etc/subuid` and `/etc/subgid` |
 | Container test fails | Check networking — ensure `slirp4netns` or `passt` is installed |
