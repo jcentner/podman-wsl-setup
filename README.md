@@ -13,7 +13,8 @@ Running AI coding agents like [nanoclaw](https://github.com/qwibitai/nanoclaw) i
 | Requirement | Notes |
 |---|---|
 | **WSL2** with an Ubuntu distro | 23.04+ recommended (for `passt` networking). 22.04 works but falls back to `slirp4netns`. |
-| **systemd enabled in WSL** | Required for the optional podman.socket (step 6). See setup below. |
+| **systemd enabled in WSL** | Required for the optional podman.socket (step 6). See [below](#ensure-systemd-is-enabled-in-wsl). |
+| **`/` as a shared mount** | WSL defaults to `private`; rootless containers need `shared`. See [below](#ensure--is-a-shared-mount). |
 | **Run as your normal user** | The script uses `sudo` only where needed. Do **not** run the script itself with `sudo`. |
 
 ### Ensure systemd is enabled in WSL
@@ -79,7 +80,7 @@ chmod +x setup-rootless-podman.sh
 
 ## What the script does
 
-1. **Environment checks** — detects WSL, systemd state, cgroup version (advisory only, never blocks).
+1. **Environment checks** — detects WSL, systemd state, cgroup version, and mount propagation (advisory only, never blocks).
 2. **Installs packages** — `podman`, `uidmap`, `dbus-user-session`, `fuse-overlayfs`, `slirp4netns`, and `passt` (if available).
 3. **Configures `/etc/subuid` & `/etc/subgid`** — adds a 65536-UID range for the current user if missing.
 4. **Runs `podman system migrate`** — only if mappings were just added, to fix storage config.
@@ -107,7 +108,7 @@ wsl --install Ubuntu-24.04 --name podman-test
 wsl -d podman-test
 ```
 
-Then inside that instance, enable systemd (see [Prerequisites](#enable-systemd-in-wsl-one-time-manual)), restart with `wsl --shutdown`, and run the script.
+Then inside that instance, verify the [prerequisites](#prerequisites) (systemd, shared mount), restart with `wsl --shutdown` if you changed `/etc/wsl.conf`, and run the script.
 
 When you're done, tear it down:
 
@@ -119,7 +120,7 @@ wsl --unregister podman-test
 
 | Symptom | Fix |
 |---|---|
-| `"/" is not a shared mount` warning | Run `sudo mount --make-rshared /`. To persist, add `command=mount --make-rshared /` under `[boot]` in `/etc/wsl.conf` and `wsl --shutdown`. |
+| `"/" is not a shared mount` warning | See [Ensure `/` is a shared mount](#ensure--is-a-shared-mount) above. |
 | `podman.socket` fails to enable | Enable systemd in `/etc/wsl.conf` and `wsl --shutdown` |
 | `rootless=false` reported | Ensure you're not running with `sudo`; check `/etc/subuid` and `/etc/subgid` |
 | Container test fails | Check networking — ensure `slirp4netns` or `passt` is installed |
