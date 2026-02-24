@@ -4,6 +4,10 @@ One-shot script to configure **rootless Podman** in an existing **WSL2 Ubuntu** 
 
 Handles package installation, subordinate UID/GID mapping, rootless verification, and an optional Docker-compatible socket, so tools expecting `DOCKER_HOST` just work.
 
+## Motivation
+
+Running AI coding agents like [nanoclaw](https://github.com/qwibitai/nanoclaw) in isolated containers is a natural fit for rootless Podman — you get per-user container isolation without Docker Desktop licensing or root privileges. This script automates the WSL2 setup so you can go from a fresh Ubuntu instance to running containers in a single command.
+
 ## Prerequisites
 
 | Requirement | Notes |
@@ -61,6 +65,28 @@ chmod +x setup-rootless-podman.sh
 - Ubuntu 23.04 under WSL2
 
 Older Ubuntu releases (22.04) should work for steps 1–5 but will lack `passt`; the script detects this and falls back gracefully.
+
+## Testing on a fresh WSL instance
+
+You can spin up an isolated Ubuntu instance to test without affecting your main WSL environment.
+
+From **Windows PowerShell**:
+
+```powershell
+# Install a fresh named instance
+wsl --install Ubuntu-24.04 --name podman-test
+
+# Open it
+wsl -d podman-test
+```
+
+Then inside that instance, enable systemd (see [Prerequisites](#enable-systemd-in-wsl-one-time-manual)), restart with `wsl --shutdown`, and run the script.
+
+When you're done, tear it down:
+
+```powershell
+wsl --unregister podman-test
+```
 
 ## Troubleshooting
 
