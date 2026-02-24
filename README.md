@@ -16,7 +16,15 @@ Running AI coding agents like [nanoclaw](https://github.com/qwibitai/nanoclaw) i
 | **systemd enabled in WSL** | Required for the optional podman.socket (step 6). See setup below. |
 | **Run as your normal user** | The script uses `sudo` only where needed. Do **not** run the script itself with `sudo`. |
 
-### Enable systemd in WSL (one-time, manual)
+### Ensure systemd is enabled in WSL
+
+Recent Windows 11 builds enable systemd by default for new Ubuntu instances. Verify with:
+
+```bash
+systemctl is-system-running
+```
+
+If it prints `running` or `degraded`, you're set. If not, enable it:
 
 ```bash
 sudo tee /etc/wsl.conf >/dev/null <<'EOF'

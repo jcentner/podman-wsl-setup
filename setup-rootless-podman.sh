@@ -13,11 +13,12 @@
 #   6) Optionally enables the rootless Docker-compatible Podman socket and
 #      appends DOCKER_HOST to ~/.bashrc
 #
-# IMPORTANT WSL NOTE (manual step):
-#   Rootless Podman works best with systemd enabled in WSL.
-#   This script CANNOT reliably edit /etc/wsl.conf and restart WSL for you.
+# IMPORTANT WSL NOTE:
+#   Rootless Podman requires systemd in WSL. Recent Windows 11 builds enable
+#   it by default for new Ubuntu instances. Verify with:
+#     systemctl is-system-running
 #
-#   Do this manually first (once):
+#   If it prints "running" or "degraded", you're set. Otherwise, enable it:
 #     sudo tee /etc/wsl.conf >/dev/null <<'WSLCONF'
 #     [boot]
 #     systemd=true
